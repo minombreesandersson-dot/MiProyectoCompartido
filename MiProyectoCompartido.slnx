@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MiApp/MiApp.csproj" />
+  <Project Path="MiAppWeb/MiAppWeb.csproj" />
+</Solution>
