@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 # Crea un proyecto ASP.NET Core MVC + EF Core (Database First, SQLite) con CRUD generado.
 # Uso: ./crear-proyecto.sh [NombreProyecto] [ruta/a/base.db]
-#   Sin argumentos pregunta el nombre (ventana si hay zenity) y usa MiAppWeb/mi_base_de_datos.db.
+#   Sin argumentos pregunta el nombre (ventana si hay zenity) y usa plantillas/alquiler-vehiculos.db
+#   (mismo esquema y datos iniciales que SistemaAlquilerVehiculos, en SQLite).
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="$PATH:$HOME/.dotnet/tools"
 
 NOMBRE="${1:-}"
-DB_ORIGEN="${2:-MiAppWeb/mi_base_de_datos.db}"
+DB_ORIGEN="${2:-plantillas/alquiler-vehiculos.db}"
 EF_VER=10.0.13   # mismo que MiAppWeb
 
 if [ -z "$NOMBRE" ]; then
   if [ -n "${DISPLAY:-}" ] && command -v zenity >/dev/null; then
-    NOMBRE=$(zenity --entry --title="Nuevo proyecto MVC" --text="Nombre del proyecto (sin espacios):" --entry-text="MiAppCrud") || exit 0
+    NOMBRE=$(zenity --entry --title="Nuevo proyecto MVC" --text="Nombre del proyecto (sin espacios):" --entry-text="SistemaAlquilerVehiculosDbFirst") || exit 0
   else
-    read -rp "Nombre del proyecto (sin espacios): " NOMBRE
+    read -rp "Nombre del proyecto (Enter = SistemaAlquilerVehiculosDbFirst): " NOMBRE
+    NOMBRE="${NOMBRE:-SistemaAlquilerVehiculosDbFirst}"
   fi
 fi
 [[ "$NOMBRE" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]] || { echo "Nombre inválido: '$NOMBRE'"; exit 1; }
@@ -40,6 +42,9 @@ dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 ../agregar-paquetes.sh "$NOMBRE" $(seq 1 13)   # los 13 paquetes extra (incluye ADO.NET y Dapper)
 
 echo "==> 4/6 Scaffolding Database First (modelos + DbContext)"
+# Nombres en español (Alquileres -> Alquiler). El código usa EF Design, así que se habilita su "compile"
+cp -r ../plantillas/es/. . && sed -i "s/__NOMBRE__/$NOMBRE/g" Data/PluralizadorEspanol.cs Data/SinValidarNavegacion.cs
+sed -i '/EntityFrameworkCore.Design"/,/<\/PackageReference>/{/<IncludeAssets>/d}' "$NOMBRE.csproj"
 dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.Sqlite \
   -o Models -c AppDbContext --context-dir Data --no-onconfiguring --force
 
@@ -47,6 +52,8 @@ dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.
 sed -i 's|"AllowedHosts": "\*"|"AllowedHosts": "*",\n  "ConnectionStrings": {\n    "DefaultConnection": "Data Source=app.db"\n  }|' appsettings.json
 sed -i "1i using Microsoft.EntityFrameworkCore;\nusing $NOMBRE.Data;" Program.cs
 sed -i 's|builder.Services.AddControllersWithViews();|&\nbuilder.Services.AddDbContext<AppDbContext>(o =>\n    o.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));\nbuilder.Services.AddScoped<AdoService>();|' Program.cs
+# Sin esto, Create/Edit de tablas con claves foráneas fallan en silencio (ver Data/SinValidarNavegacion.cs)
+sed -i 's|AddControllersWithViews();|AddControllersWithViews(o => o.ModelMetadataDetailsProviders.Add(new SinValidarNavegacion()));|' Program.cs
 
 # ADO.NET: servicio, controlador y vista de ejemplo (/Ado), antes del CRUD porque el generador compila
 cp -r ../plantillas/ado/. .
@@ -65,6 +72,23 @@ for f in Models/*.cs; do
 done
 
 nav Ado "ADO.NET"
+
+# Nombres en vez de Ids en listas desplegables y columnas de relaciones (Cliente "1" -> "Juan")
+for f in Models/*.cs; do
+  grep -oP 'public virtual \K\w+ \w+(?= \{ get; set; \} = null!;)' "$f" || true
+done | sort -u | while read -r clase nav; do
+  campo=$(grep -oP 'public string \K(Nombres?|Descripcion)\b' "Models/$clase.cs" | head -1 || true)
+  [ -n "$campo" ] || campo=$(grep -oP 'public string \K\w+' "Models/$clase.cs" | head -1 || true)
+  [ -n "$campo" ] || continue
+  set=$(grep -oP "DbSet<$clase> \K\w+" Data/AppDbContext.cs)
+  sed -i "s/new SelectList(_context\.$set, \"Id\", \"Id\"/new SelectList(_context.$set, \"Id\", \"$campo\"/" Controllers/*Controller.cs
+  sed -i "s/item\.$nav\.Id)/item.$nav.$campo)/; s/model\.$nav\.Id)/model.$nav.$campo)/" Views/*/*.cshtml
+done
+# Listas desplegables con flecha (Bootstrap 5) y tablas con scroll horizontal en pantallas chicas
+sed -i 's/<select \(.*\)class ="form-control"/<select \1class ="form-select"/' Views/*/*.cshtml
+for v in $(grep -l '<table class="table">' Views/*/Index.cshtml); do
+  sed -i 's|<table class="table">|<div class="table-responsive"><table class="table">|; s|</table>|</table></div>|' "$v"
+done
 
 echo "==> 6/6 Compilando"
 dotnet build

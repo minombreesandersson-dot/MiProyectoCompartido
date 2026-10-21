@@ -2,7 +2,7 @@
 # Agrega paquetes NuGet extra a un proyecto, eligiéndolos de una lista.
 # Uso: ./agregar-paquetes.sh [CarpetaProyecto] [números...]
 #   ./agregar-paquetes.sh SistemaAlquilerVehiculos        (muestra el menú)
-#   ./agregar-paquetes.sh MiApp 1 3 5                     (sin preguntar)
+#   ./agregar-paquetes.sh SistemaAlquilerVehiculos 3 4 7   (sin preguntar)
 set -euo pipefail
 cd "$(dirname "$0")"
 EF_VER=10.0.13   # misma versión de EF Core en todos los proyectos
