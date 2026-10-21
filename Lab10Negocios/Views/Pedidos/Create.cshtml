@@ -1,0 +1,117 @@
+@model Lab10Negocios.ViewModels.PedidoCrearVM
+@{
+    ViewData["Title"] = "Nuevo pedido";
+    var productos = (List<Lab10Negocios.Controllers.ProductoOpcionVM>)ViewBag.Productos;
+}
+
+<h1>Nuevo pedido</h1>
+<p class="text-muted">Precio y stock se verifican en el servidor al confirmar; lo que se ve aquí es referencial.</p>
+
+<form asp-action="Create" method="post" id="form-pedido">
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label asp-for="IdCliente" class="form-label"></label>
+            <select asp-for="IdCliente" asp-items="ViewBag.Clientes" class="form-select">
+                <option value="">Seleccione un cliente</option>
+            </select>
+            <span asp-validation-for="IdCliente" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="IdEmpleado" class="form-label"></label>
+            <select asp-for="IdEmpleado" asp-items="ViewBag.Empleados" class="form-select">
+                <option value="">Seleccione un empleado</option>
+            </select>
+            <span asp-validation-for="IdEmpleado" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle" id="lineas">
+            <thead>
+                <tr><th style="min-width:16rem">Producto</th><th class="text-end">Precio (S/)</th><th class="text-end">Stock</th><th style="width:8rem">Cantidad</th><th class="text-end">Subtotal (S/)</th><th></th></tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < Model.Lineas.Count; i++)
+                {
+                    <tr class="linea">
+                        <td>
+                            <select name="Lineas[@i].IdProducto" class="form-select producto">
+                                <option value="">Seleccione</option>
+                                @foreach (var p in productos)
+                                {
+                                    <option value="@p.IdProducto" data-precio="@p.Precio" data-stock="@p.Stock" selected="@(p.IdProducto == Model.Lineas[i].IdProducto)">@p.Nombre</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="text-end precio"></td>
+                        <td class="text-end stock"></td>
+                        <td>
+                            <input name="Lineas[@i].Cantidad" value="@Model.Lineas[i].Cantidad" type="number" min="1" step="1" class="form-control cantidad" />
+                            <input name="Lineas[@i].PrecioUnidad" type="hidden" class="precio-enviado" />
+                        </td>
+                        <td class="text-end subtotal"></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger quitar" aria-label="Quitar producto">Quitar</button></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr><td colspan="4" class="text-end fw-bold">Total</td><td class="text-end fw-bold" id="total">0.00</td><td></td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <button type="button" class="btn btn-outline-primary" id="agregar">Agregar producto</button>
+    <button type="submit" class="btn btn-primary">Confirmar pedido</button>
+    <a asp-action="Index" class="btn btn-link">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const cuerpo = document.querySelector('#lineas tbody');
+        const plantilla = cuerpo.querySelector('tr.linea').cloneNode(true);
+        const soles = n => n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Los nombres deben ser Lineas[0], Lineas[1]... seguidos para que MVC los enlace a la lista
+        function renumerar() {
+            cuerpo.querySelectorAll('tr.linea').forEach((fila, i) =>
+                fila.querySelectorAll('[name]').forEach(c => c.name = c.name.replace(/Lineas\[\d+\]/, `Lineas[${i}]`)));
+        }
+
+        function recalcular() {
+            let total = 0;
+            cuerpo.querySelectorAll('tr.linea').forEach(fila => {
+                const op = fila.querySelector('.producto').selectedOptions[0];
+                const precio = Number(op?.dataset.precio ?? 0), stock = op?.dataset.stock;
+                const cantidad = Number(fila.querySelector('.cantidad').value || 0);
+                const sub = precio * cantidad;
+                fila.querySelector('.precio').textContent = op?.value ? soles(precio) : '';
+                fila.querySelector('.stock').textContent = op?.value ? stock : '';
+                fila.querySelector('.precio-enviado').value = op?.value ? precio : '';
+                fila.querySelector('.subtotal').textContent = op?.value ? soles(sub) : '';
+                fila.classList.toggle('table-warning', !!op?.value && cantidad > Number(stock));
+                total += sub;
+            });
+            document.getElementById('total').textContent = soles(total);
+        }
+
+        document.getElementById('agregar').addEventListener('click', () => {
+            const fila = plantilla.cloneNode(true);
+            fila.querySelector('.producto').value = '';
+            fila.querySelector('.cantidad').value = '';
+            cuerpo.appendChild(fila);
+            renumerar(); recalcular();
+        });
+        cuerpo.addEventListener('click', e => {
+            if (!e.target.classList.contains('quitar')) return;
+            if (cuerpo.querySelectorAll('tr.linea').length > 1) e.target.closest('tr').remove();
+            else { const f = e.target.closest('tr'); f.querySelector('.producto').value = ''; f.querySelector('.cantidad').value = ''; }
+            renumerar(); recalcular();
+        });
+        cuerpo.addEventListener('input', recalcular);
+        cuerpo.addEventListener('change', recalcular);
+        recalcular();
+    </script>
+}

@@ -5,7 +5,7 @@ namespace __NOMBRE__.Data;
 
 // dotnet ef dbcontext scaffold usa estas reglas para nombrar clases y DbSet:
 // tabla Alquileres -> clase Alquiler -> DbSet Alquileres (el pluralizador por defecto, en inglés, da "Alquilere").
-// ponytail: reglas básicas del español; irregulares como Países -> País quedan sin tilde ("Paise"), renombrar a mano.
+// ponytail: reglas básicas del español; irregulares como Países -> "Paise" hay que renombrarlos a mano.
 public class DisenoEspanol : IDesignTimeServices
 {
     public void ConfigureDesignTimeServices(IServiceCollection services) =>
@@ -27,6 +27,7 @@ public class PluralizadorEspanol : IPluralizer
     public string Singularize(string palabra)
     {
         if (string.IsNullOrEmpty(palabra) || palabra.Length < 4 || !palabra.EndsWith('s')) return palabra;
+        if (palabra.EndsWith("is", StringComparison.OrdinalIgnoreCase)) return palabra;   // País, Análisis: ya singular
         if (palabra.EndsWith("ces")) return palabra[..^3] + "z";                 // Lapices -> Lapiz
         // Alquileres, Ciudades, Roles -> quitar "es"; Detalles, Padres, Clientes -> quitar solo "s"
         if (palabra.EndsWith("es") && "lrndjy".Contains(palabra[^3]) && Vocales.Contains(char.ToLower(palabra[^4])))

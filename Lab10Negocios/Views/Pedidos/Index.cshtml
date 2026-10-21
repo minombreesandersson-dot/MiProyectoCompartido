@@ -1,0 +1,39 @@
+@model List<Lab10Negocios.Controllers.PedidoFilaVM>
+@{
+    ViewData["Title"] = "Pedidos";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Pedidos</h1>
+    <a asp-action="Create" class="btn btn-primary">Nuevo pedido</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-6">
+        <select name="idCliente" asp-items="ViewBag.Clientes" class="form-select" onchange="this.form.submit()">
+            <option value="">Todos los clientes</option>
+        </select>
+    </div>
+</form>
+
+<p>Últimos @Model.Count pedidos (más recientes primero)</p>
+<div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+        <thead>
+            <tr><th>N.º</th><th>Fecha</th><th>Cliente</th><th class="text-end">Productos</th><th class="text-end">Total (S/)</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.IdPedido</td>
+                    <td>@p.FechaPedido.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Cliente</td>
+                    <td class="text-end">@p.Productos</td>
+                    <td class="text-end">@p.Total.ToString("N2")</td>
+                    <td><a asp-action="Details" asp-route-id="@p.IdPedido">Ver detalle</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

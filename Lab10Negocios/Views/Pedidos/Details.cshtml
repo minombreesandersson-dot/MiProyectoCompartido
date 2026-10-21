@@ -1,0 +1,41 @@
+@model Lab10Negocios.ViewModels.PedidoDetalleVM
+@{
+    ViewData["Title"] = $"Pedido {Model.IdPedido}";
+}
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success" role="status">@exito</div>
+}
+
+<h1>Pedido N.º @Model.IdPedido</h1>
+<dl class="row">
+    <dt class="col-sm-2">Fecha</dt><dd class="col-sm-10">@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</dd>
+    <dt class="col-sm-2">Cliente</dt><dd class="col-sm-10">@Model.Cliente</dd>
+    <dt class="col-sm-2">Empleado</dt><dd class="col-sm-10">@Model.Empleado</dd>
+</dl>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr><th>Producto</th><th class="text-end">Precio (S/)</th><th class="text-end">Cantidad</th><th class="text-end">Descuento</th><th class="text-end">Subtotal (S/)</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var l in Model.Lineas)
+            {
+                <tr>
+                    <td>@l.Producto</td>
+                    <td class="text-end">@l.PrecioUnidad.ToString("N2")</td>
+                    <td class="text-end">@l.Cantidad</td>
+                    <td class="text-end">@l.Descuento.ToString("P0")</td>
+                    <td class="text-end">@l.Subtotal.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr class="fw-bold"><td colspan="4" class="text-end">Total</td><td class="text-end">@Model.Total.ToString("N2")</td></tr>
+        </tfoot>
+    </table>
+</div>
+
+<a asp-action="Index">Volver a pedidos</a> · <a asp-action="Create">Registrar otro pedido</a>

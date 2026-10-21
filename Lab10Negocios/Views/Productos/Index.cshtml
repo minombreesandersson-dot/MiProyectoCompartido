@@ -1,0 +1,42 @@
+@model List<Lab10Negocios.Models.Producto>
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<h1>Productos</h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-5">
+        <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Buscar por nombre" />
+    </div>
+    <div class="col-sm-4">
+        <select name="idCategoria" asp-items="ViewBag.Categorias" class="form-select">
+            <option value="">Todas las categorías</option>
+        </select>
+    </div>
+    <div class="col-sm-3">
+        <button class="btn btn-primary">Buscar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+</form>
+
+<p>@Model.Count producto(s)</p>
+<div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+        <thead>
+            <tr><th>Producto</th><th>Categoría</th><th>Unidad</th><th class="text-end">Precio (S/)</th><th class="text-end">Stock</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr class="@(p.UnidadesEnExistencia == 0 ? "table-danger" : "")">
+                    <td>@p.NombreProducto</td>
+                    <td>@p.IdCategoriaNavigation.NombreCategoria</td>
+                    <td>@p.Umedida</td>
+                    <td class="text-end">@p.PrecioUnidad.ToString("N2")</td>
+                    <td class="text-end">@(p.UnidadesEnExistencia == 0 ? "Agotado" : p.UnidadesEnExistencia.ToString())</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
