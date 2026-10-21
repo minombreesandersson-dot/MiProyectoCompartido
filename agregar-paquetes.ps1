@@ -1,4 +1,4 @@
-# Versión Windows de agregar-paquetes.sh. Doble clic en agregar-paquetes.bat
+﻿# Versión Windows de agregar-paquetes.sh. Doble clic en agregar-paquetes.bat
 # Uso: .\agregar-paquetes.ps1 [-Proyecto MiApp] [-Numeros 1,3,5]
 param([string]$Proyecto, [int[]]$Numeros)
 $ErrorActionPreference = "Stop"

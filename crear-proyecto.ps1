@@ -1,4 +1,4 @@
-# Versión Windows de crear-proyecto.sh (PowerShell). Doble clic en crear-proyecto.bat
+﻿# Versión Windows de crear-proyecto.sh (PowerShell). Doble clic en crear-proyecto.bat
 # Uso: .\crear-proyecto.ps1 [-Nombre MiApp] [-Db MiAppWeb\mi_base_de_datos.db]
 param([string]$Nombre, [string]$Db = "MiAppWeb\mi_base_de_datos.db")
 $ErrorActionPreference = "Stop"
@@ -31,6 +31,7 @@ foreach ($p in "Microsoft.EntityFrameworkCore.Sqlite","Microsoft.EntityFramework
 }
 Run dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 & ..\agregar-paquetes.ps1 -Proyecto $Nombre -Numeros (1..11)   # los 11 paquetes extra
+Set-Location "$PSScriptRoot\$Nombre"   # agregar-paquetes.ps1 cambia la carpeta actual
 
 Write-Host "==> 4/6 Scaffolding Database First"
 Run dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.Sqlite `

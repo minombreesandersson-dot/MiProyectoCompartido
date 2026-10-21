@@ -18,6 +18,9 @@ esac
 git add -A
 if git diff --cached --quiet; then echo "Nada nuevo que guardar."; exit 0; fi
 git commit -q -m "${1:-Guardado $(date '+%Y-%m-%d %H:%M')}"
-git pull -q --rebase origin "$(git branch --show-current)"
+if ! git pull -q --rebase origin "$(git branch --show-current)"; then
+  git rebase --abort 2>/dev/null || true
+  echo "CONFLICTO con cambios de un compañero: tu guardado quedó local. Resuélvelo con: git pull --rebase"; exit 1
+fi
 git push -q origin HEAD
 echo "Guardado en GitHub: $(git log -1 --format='%h %s')"

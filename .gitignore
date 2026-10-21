@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# log del guardado automático (guardar.sh --auto)
+.guardar.log
