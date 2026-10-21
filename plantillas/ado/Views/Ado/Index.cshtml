@@ -1,0 +1,44 @@
+@using System.Data
+@model DataTable?
+@{
+    ViewData["Title"] = "Consulta ADO.NET";
+    var tablas = (List<string>)ViewBag.Tablas;
+}
+
+<h1>Consulta con ADO.NET</h1>
+<p>Datos leídos con <code>SqliteConnection</code>, <code>SqliteCommand</code> y <code>DataReader</code>, sin Entity Framework.</p>
+
+<form method="get" class="mb-3">
+    <select name="tabla" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+        @foreach (var t in tablas)
+        {
+            <option value="@t" selected="@(t == (string?)ViewBag.Tabla)">@t</option>
+        }
+    </select>
+</form>
+
+@if (Model is null)
+{
+    <p>La base no tiene tablas.</p>
+}
+else
+{
+    <p>@ViewBag.Total fila(s) en <strong>@ViewBag.Tabla</strong> (se muestran hasta 100).</p>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    @foreach (DataColumn c in Model.Columns) { <th>@c.ColumnName</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (DataRow f in Model.Rows)
+                {
+                    <tr>
+                        @foreach (var v in f.ItemArray) { <td>@v</td> }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

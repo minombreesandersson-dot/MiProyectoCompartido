@@ -20,6 +20,8 @@ PAQUETES=(
   "9|QuestPDF||Generar reportes PDF (boletas, listados)"
   "10|Swashbuckle.AspNetCore||Swagger: documentar y probar una API"
   "11|Serilog.AspNetCore||Logs en archivo y consola"
+  "12|Microsoft.Data.SqlClient||ADO.NET para SQL Server (SqlConnection, SqlCommand)"
+  "13|Dapper||ADO.NET simplificado: consultas SQL en una línea"
 )
 
 PROY="${1:-}"

@@ -37,7 +37,7 @@ for p in Microsoft.EntityFrameworkCore.Sqlite Microsoft.EntityFrameworkCore.Desi
   dotnet add package "$p" -v "$EF_VER"
 done
 dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
-../agregar-paquetes.sh "$NOMBRE" 1 2 3 4 5 6 7 8 9 10 11   # los 11 paquetes extra
+../agregar-paquetes.sh "$NOMBRE" $(seq 1 13)   # los 13 paquetes extra (incluye ADO.NET y Dapper)
 
 echo "==> 4/6 Scaffolding Database First (modelos + DbContext)"
 dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.Sqlite \
@@ -46,15 +46,25 @@ dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.
 # Cadena de conexión en appsettings.json y registro en Program.cs
 sed -i 's|"AllowedHosts": "\*"|"AllowedHosts": "*",\n  "ConnectionStrings": {\n    "DefaultConnection": "Data Source=app.db"\n  }|' appsettings.json
 sed -i "1i using Microsoft.EntityFrameworkCore;\nusing $NOMBRE.Data;" Program.cs
-sed -i 's|builder.Services.AddControllersWithViews();|&\nbuilder.Services.AddDbContext<AppDbContext>(o =>\n    o.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));|' Program.cs
+sed -i 's|builder.Services.AddControllersWithViews();|&\nbuilder.Services.AddDbContext<AppDbContext>(o =>\n    o.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));\nbuilder.Services.AddScoped<AdoService>();|' Program.cs
+
+# ADO.NET: servicio, controlador y vista de ejemplo (/Ado), antes del CRUD porque el generador compila
+cp -r ../plantillas/ado/. .
+sed -i "s/__NOMBRE__/$NOMBRE/g" Data/AdoService.cs Controllers/AdoController.cs
+
+# Enlace en el menú superior de la app
+nav() { sed -i "0,/<\/ul>/s|<\/ul>|    <li class=\"nav-item\"><a class=\"nav-link text-dark\" asp-controller=\"$1\" asp-action=\"Index\">$2</a></li>\n                    </ul>|" Views/Shared/_Layout.cshtml; }
 
 echo "==> 5/6 CRUD (controlador + vistas) por cada tabla"
 for f in Models/*.cs; do
   m=$(basename "$f" .cs)
-  [ "$m" = ErrorViewModel ] && continue
+  case "$m" in ErrorViewModel|Efmigrations*) continue ;; esac   # Efmigrations* = tablas internas de EF
   dotnet-aspnet-codegenerator controller -name "${m}Controller" -m "$m" -dc AppDbContext \
     --relativeFolderPath Controllers --useDefaultLayout --referenceScriptLibraries
+  nav "$m" "$m"
 done
+
+nav Ado "ADO.NET"
 
 echo "==> 6/6 Compilando"
 dotnet build

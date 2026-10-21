@@ -16,15 +16,17 @@ $Paquetes = @(
   @(8, "ClosedXML", "", "Exportar a Excel (.xlsx)"),
   @(9, "QuestPDF", "", "Generar reportes PDF"),
   @(10, "Swashbuckle.AspNetCore", "", "Swagger: documentar y probar una API"),
-  @(11, "Serilog.AspNetCore", "", "Logs en archivo y consola")
+  @(11, "Serilog.AspNetCore", "", "Logs en archivo y consola"),
+  @(12, "Microsoft.Data.SqlClient", "", "ADO.NET para SQL Server (SqlConnection, SqlCommand)"),
+  @(13, "Dapper", "", "ADO.NET simplificado: consultas SQL en una línea")
 )
 
 if (-not $Proyecto) {
-  $lista = Get-ChildItem -Directory | Where-Object { Test-Path "$($_.Name)\$($_.Name).csproj" } | ForEach-Object Name
+  $lista = Get-ChildItem -Directory | Where-Object { Test-Path "$($_.Name)/$($_.Name).csproj" } | ForEach-Object Name
   Write-Host "Proyectos: $($lista -join ', ')"
   $Proyecto = Read-Host "¿A cuál?"
 }
-$csproj = "$Proyecto\$Proyecto.csproj"
+$csproj = "$Proyecto/$Proyecto.csproj"
 if (-not (Test-Path $csproj)) { throw "No encuentro $csproj" }
 
 if (-not $Numeros) {
