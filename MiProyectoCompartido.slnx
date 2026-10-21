@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="MiApp/MiApp.csproj" />
   <Project Path="MiAppWeb/MiAppWeb.csproj" />
+  <Project Path="PruebaCrud/PruebaCrud.csproj" />
 </Solution>
