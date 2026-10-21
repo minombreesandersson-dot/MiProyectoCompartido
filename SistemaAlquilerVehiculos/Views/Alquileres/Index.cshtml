@@ -1,0 +1,53 @@
+@model IEnumerable<SistemaAlquilerVehiculos.Models.Alquiler>
+
+@{
+    ViewData["Title"] = "Listado de Alquileres";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Listado de Alquileres Registrados</h2>
+        <a asp-action="Create" class="btn btn-primary">Registrar Nuevo Alquiler</a>
+    </div>
+
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Cliente</th>
+                <th>Marca / Modelo</th>
+                <th>Fechas (Inicio - Fin)</th>
+                <th>Días</th>
+                <th>Precio/Día</th>
+                <th>Desc. (%)</th>
+                <th>Costo Total</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted">No hay alquileres registrados aún.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Cliente?.NombreCompleto</td>
+                        <td>
+                            <strong>@item.ModeloVehiculo?.Marca?.Nombre</strong> - @item.ModeloVehiculo?.Nombre
+                        </td>
+                        <td>@item.FechaInicio.ToString("dd/MM/yyyy") - @item.FechaFin.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Dias</td>
+                        <td>S/ @item.PrecioDiaAplicado.ToString("F2")</td>
+                        <td>@item.DescuentoPorcentaje%</td>
+                        <td><strong>S/ @item.CostoTotal.ToString("F2")</strong></td>
+                        <td><span class="badge bg-success">@item.Estado</span></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

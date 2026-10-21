@@ -1,0 +1,148 @@
+@model SistemaAlquilerVehiculos.Models.Alquiler
+
+@{
+    ViewData["Title"] = "Registrar Nuevo Alquiler";
+}
+
+<div class="container mt-4">
+    <h2>Registrar Nuevo Alquiler</h2>
+    <hr />
+
+    <form asp-action="Create" method="post" id="alquilerForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label font-weight-bold">Cliente</label>
+                <select name="ClienteId" class="form-control" asp-items="ViewBag.ClienteId">
+                    <option value="">-- Seleccione un Cliente --</option>
+                </select>
+                <span asp-validation-for="ClienteId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label font-weight-bold">Marca de Vehículo</label>
+                <select id="selectMarca" name="marcaId" class="form-control" asp-items="ViewBag.MarcaId">
+                    <option value="">-- Seleccione una Marca --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="ModeloVehiculoId" class="form-label font-weight-bold"></label>
+                <select id="selectModelo" asp-for="ModeloVehiculoId" class="form-control" disabled>
+                    <option value="">-- Seleccione primero una marca --</option>
+                </select>
+                <span asp-validation-for="ModeloVehiculoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="DescuentoPorcentaje" class="form-label font-weight-bold"></label>
+                <input id="inputDescuento" asp-for="DescuentoPorcentaje" class="form-control" value="0" type="number" step="0.01" min="0" max="30" />
+                <span asp-validation-for="DescuentoPorcentaje" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="FechaInicio" class="form-label font-weight-bold"></label>
+                <input id="fechaInicio" asp-for="FechaInicio" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="FechaInicio" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="FechaFin" class="form-label font-weight-bold"></label>
+                <input id="fechaFin" asp-for="FechaFin" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="FechaFin" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Resumen de Cálculo (Previsualización)</h5>
+                <div class="row">
+                    <div class="col-md-3"><strong>Días:</strong> <span id="lblDias">0</span></div>
+                    <div class="col-md-3"><strong>Precio/Día:</strong> S/ <span id="lblPrecioDia">0.00</span></div>
+                    <div class="col-md-3"><strong>Subtotal:</strong> S/ <span id="lblSubtotal">0.00</span></div>
+                    <div class="col-md-3"><strong>Total Estimado:</strong> S/ <span id="lblTotal" class="text-primary font-weight-bold">0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Guardar Alquiler</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectMarca = document.getElementById("selectMarca");
+            const selectModelo = document.getElementById("selectModelo");
+            const fechaInicio = document.getElementById("fechaInicio");
+            const fechaFin = document.getElementById("fechaFin");
+            const inputDescuento = document.getElementById("inputDescuento");
+
+            selectMarca.addEventListener("change", function () {
+                const marcaId = this.value;
+                selectModelo.innerHTML = '<option value="">-- Seleccione un Modelo --</option>';
+
+                if (!marcaId) {
+                    selectModelo.disabled = true;
+                    recalcular();
+                    return;
+                }
+
+                fetch(`/Alquileres/GetModelosPorMarca?marcaId=${marcaId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        selectModelo.disabled = false;
+                        data.forEach(item => {
+                            const option = document.createElement("option");
+                            option.value = item.id;
+                            option.textContent = item.nombre;
+                            option.dataset.precio = item.precioDia;
+                            selectModelo.appendChild(option);
+                        });
+                        recalcular();
+                    })
+                    .catch(error => console.error("Error al cargar modelos:", error));
+            });
+
+            selectModelo.addEventListener("change", recalcular);
+            fechaInicio.addEventListener("change", recalcular);
+            fechaFin.addEventListener("change", recalcular);
+            inputDescuento.addEventListener("input", recalcular);
+
+            function recalcular() {
+                const f1 = new Date(fechaInicio.value);
+                const f2 = new Date(fechaFin.value);
+                const selectedOption = selectModelo.options[selectModelo.selectedIndex];
+
+                if (!fechaInicio.value || !fechaFin.value || f2 < f1 || !selectedOption || !selectedOption.dataset.precio) {
+                    document.getElementById("lblDias").textContent = "0";
+                    document.getElementById("lblPrecioDia").textContent = "0.00";
+                    document.getElementById("lblSubtotal").textContent = "0.00";
+                    document.getElementById("lblTotal").textContent = "0.00";
+                    return;
+                }
+
+                const diffTime = Math.abs(f2 - f1);
+                const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                const precioDia = parseFloat(selectedOption.dataset.precio);
+                const descuentoPct = parseFloat(inputDescuento.value) || 0;
+
+                const subtotal = dias * precioDia;
+                const descuentoMonto = subtotal * (descuentoPct / 100);
+                const total = subtotal - descuentoMonto;
+
+                document.getElementById("lblDias").textContent = dias;
+                document.getElementById("lblPrecioDia").textContent = precioDia.toFixed(2);
+                document.getElementById("lblSubtotal").textContent = subtotal.toFixed(2);
+                document.getElementById("lblTotal").textContent = total.toFixed(2);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,45 @@
+@model SistemaAlquilerVehiculos.Models.Alquiler
+
+@{
+    ViewData["Title"] = "Detalle del Alquiler";
+    
+    // Cálculos para el desglose visual
+    decimal subtotal = Model.Dias * Model.PrecioDiaAplicado;
+    decimal montoDescuento = subtotal * (Model.DescuentoPorcentaje / 100m);
+}
+
+<div class="container mt-4">
+    <h2>Detalle del Alquiler #@Model.Id</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Datos del Cliente y Vehículo</div>
+                <div class="card-body">
+                    <p><strong>Cliente:</strong> @Model.Cliente?.NombreCompleto</p>
+                    <p><strong>Documento:</strong> @Model.Cliente?.Documento</p>
+                    <p><strong>Marca:</strong> @Model.ModeloVehiculo?.Marca?.Nombre</p>
+                    <p><strong>Modelo:</strong> @Model.ModeloVehiculo?.Nombre (@Model.ModeloVehiculo?.Anio)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-success text-white">Desglose Financiero del Alquiler</div>
+                <div class="card-body">
+                    <p><strong>Rango de Fechas:</strong> @Model.FechaInicio.ToString("dd/MM/yyyy") al @Model.FechaFin.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Días Facturados:</strong> @Model.Dias día(s)</p>
+                    <p><strong>Precio/Día Aplicado:</strong> S/ @Model.PrecioDiaAplicado.ToString("F2")</p>
+                    <p><strong>Subtotal (Días × Precio/Día):</strong> S/ @subtotal.ToString("F2")</p>
+                    <p><strong>Descuento Aplicado (@Model.DescuentoPorcentaje%):</strong> - S/ @montoDescuento.ToString("F2")</p>
+                    <hr />
+                    <h4><strong>Costo Total Final: S/ @Model.CostoTotal.ToString("F2")</strong></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-secondary">Volver al Listado</a>
+</div>
