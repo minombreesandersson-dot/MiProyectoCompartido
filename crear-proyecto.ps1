@@ -30,6 +30,7 @@ foreach ($p in "Microsoft.EntityFrameworkCore.Sqlite","Microsoft.EntityFramework
   Run dotnet add package $p -v $EfVer
 }
 Run dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
+& ..\agregar-paquetes.ps1 -Proyecto $Nombre   # menú de paquetes extra (opcional)
 
 Write-Host "==> 4/6 Scaffolding Database First"
 Run dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.Sqlite `

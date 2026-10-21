@@ -37,6 +37,7 @@ for p in Microsoft.EntityFrameworkCore.Sqlite Microsoft.EntityFrameworkCore.Desi
   dotnet add package "$p" -v "$EF_VER"
 done
 dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
+../agregar-paquetes.sh "$NOMBRE"   # menú de paquetes extra (opcional)
 
 echo "==> 4/6 Scaffolding Database First (modelos + DbContext)"
 dotnet ef dbcontext scaffold "Data Source=app.db" Microsoft.EntityFrameworkCore.Sqlite \
