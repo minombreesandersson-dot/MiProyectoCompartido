@@ -18,5 +18,6 @@ esac
 git add -A
 if git diff --cached --quiet; then echo "Nada nuevo que guardar."; exit 0; fi
 git commit -q -m "${1:-Guardado $(date '+%Y-%m-%d %H:%M')}"
+git pull -q --rebase origin "$(git branch --show-current)"
 git push -q origin HEAD
 echo "Guardado en GitHub: $(git log -1 --format='%h %s')"

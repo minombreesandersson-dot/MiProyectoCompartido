@@ -5,5 +5,6 @@ git add -A
 git diff --cached --quiet
 if ($LASTEXITCODE -eq 0) { Write-Host "Nada nuevo que guardar."; exit 0 }
 git commit -q -m $Mensaje
+git pull -q --rebase origin (git branch --show-current)
 git push -q origin HEAD
 Write-Host "Guardado en GitHub: $(git log -1 --format='%h %s')"
