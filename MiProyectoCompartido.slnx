@@ -2,5 +2,4 @@
   <Project Path="MiApp/MiApp.csproj" />
   <Project Path="MiAppWeb/MiAppWeb.csproj" />
   <Project Path="PruebaCrud/PruebaCrud.csproj" />
-  <Project Path="PruebaTodos/PruebaTodos.csproj" />
 </Solution>
